@@ -10,7 +10,7 @@ hotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
 
 # In[22]:
 
-hotnewsSoup = BeautifulSoup(hotnewsReq.text)
+hotnewsSoup = BeautifulSoup(hotnewsReq.text , "html.parser")
 
 
 # In[43]:
