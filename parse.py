@@ -1,33 +1,24 @@
-
-# coding: utf-8
-
-# In[23]:
-
 import requests
 from bs4 import BeautifulSoup
 hotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
+hotnewsSoup = BeautifulSoup(hotnewsReq.text)
 
+hotnews = []
 
-# In[22]:
+for titles in hotnewsSoup.select('.part_pictxt_2 h3 a'):
+    url = "http://www.ettoday.net" + titles.get('href')
 
-hotnewsSoup = BeautifulSoup(hotnewsReq.text , "html.parser")
+    detailReq = requests.get(url)
+    detailSoup = BeautifulSoup(detailReq.text)
 
-
-# In[43]:
-
-hotnewsTitle = []
-for titles in hotnewsSoup.select('h3 a'):
-    hotnewsTitle.append([titles.text , titles.get('href')])
-
-
-# In[53]:
-
-for lists in hotnewsTitle:
-    [title,href] = lists
-    print title , href
-
-
-# In[ ]:
+    img = detailSoup.select('meta[property="og:image"]')[0].get('content')
+    keywords = [keyword.text for keyword in detailSoup.select('.menu_txt_2 a strong')]
+    hotnews.append([titles.text , url , img , keywords])
+for lists in hotnews:
+    [title,href,img , keywords] = lists
+    print title , href , img
+    for keyword in keywords:
+        print keyword
 
 
 
