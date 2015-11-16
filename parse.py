@@ -28,20 +28,19 @@ for titles , time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.
     hotnews.append([titles.text , tag , url , img , keywords , time])
 
 for lists in hotnews:
-    [title, tag, url, img, keywords , time] = lists
+    [title, category, url, img, keywords , time] = lists
     dataObject = {
-        "url" : url,
-        "content" : "",
-        "keywords" : keywords,
-        "create_date" : time,
-        "image" : img,
-        "newsTitle" : title,
-        "tag" : tag,
-        "title" : title,
-        "name" : "Ettoday",
-        "comment" : [],
-        "dislike" : [],
-        "like" : [],
-        "__v" : 0
+        "title": title, # 標題
+        "category": '', # 分類
+        "keywords" : keywords, #關鍵字
+        "shareCount": '', # 分享數
+        "likeCount": '', # 按讚數
+        "browserCount": '', # 瀏覽數
+        "content": '', #內文
+        "comment" : [], # 評論
+        "url" : url, # 網址
+        "create_date" : time, # 發布時間
+        "image" : img, # 圖片
+        "source" : "Ettoday", # 來源
     }
     collection.insert_one(dataObject)
