@@ -31,11 +31,7 @@ for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hot
     fbData = fbReq.json()
     shareCount = fbData[url]['shares']
     likeCount = fbData[url]['shares']
-    try:
-        commentCount = fbData[url]['comments']
-    except KeyError:
-        commentCount = 0
-
+    commentCount = fbData[url]['comments'] if fbData[url].has_key('comments') else 0 
     content = content.text
 
     time = time.text
