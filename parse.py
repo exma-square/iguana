@@ -44,7 +44,7 @@ for lists in hotnews:
     [title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img] = lists
     dataObject = {
         "title": title, # 標題
-        "category": '', # 分類
+        "category": category, # 分類
         "keywords" : keywords, #關鍵字
         "shareCount": '', # 分享數
         "likeCount": '', # 按讚數
