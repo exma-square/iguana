@@ -52,7 +52,7 @@ for lists in hotnews:
         "shareCount": shareCount, # 分享數
         "likeCount": likeCount, # 按讚數
         "commentCount": commentCount,
-        "browserCount": 0, # 瀏覽數
+        "browserCount": None, # 瀏覽數
         "content": content, #內文
         "comment" : [], # 評論
         "url" : url, # 網址
