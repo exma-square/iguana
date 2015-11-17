@@ -29,8 +29,8 @@ for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hot
     url = detailSoup.select('head link[rel="canonical"]')[0].get('href')
     fbReq = requests.get('https://graph.facebook.com/?ids=' + url)
     fbData = fbReq.json()
-    shareCount = fbData[url]['shares']
-    likeCount = fbData[url]['shares']
+    shareCount = fbData[url]['shares'] if fbData[url].has_key('shares') else 0 
+    likeCount = shareCount
     commentCount = fbData[url]['comments'] if fbData[url].has_key('comments') else 0 
     content = content.text
 
