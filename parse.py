@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
@@ -13,16 +14,21 @@ hotnewsSoup = BeautifulSoup(hotnewsReq.text, "html.parser")
 
 hotnews = []
 
-for titles , time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.select('.box_0.clearfix p.summary span')):
+for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.select('.box_0.clearfix p.summary'), hotnewsSoup.select('.box_0.clearfix p.summary span')):
     url = "http://www.ettoday.net" + titles.get('href')
 
     detailReq = requests.get(url)
     detailSoup = BeautifulSoup(detailReq.text)
 
+    title = titles.text
+
+    category = detailSoup.select('body')[0].get('id')
+
+    keywords = [keyword.text for keyword in detailSoup.select('.menu_txt_2 a strong')]
+
     url = detailSoup.select('head link[rel="canonical"]')[0].get('href')
     fbReq = requests.get('https://graph.facebook.com/?ids=' + url)
     fbData = fbReq.json()
-
     shareCount = fbData[url]['shares']
     likeCount = fbData[url]['shares']
     try:
@@ -30,15 +36,16 @@ for titles , time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.
     except KeyError:
         commentCount = 0
 
+    content = content.text
 
     time = time.text
     time = time.strip("(")
     time = time.strip(")")
     time = time.replace(" " , "T") + "Z"
-    category = detailSoup.select('body')[0].get('id')
+
     img = detailSoup.select('meta[property="og:image"]')[0].get('content')
-    keywords = [keyword.text for keyword in detailSoup.select('.menu_txt_2 a strong')]
-    hotnews.append([titles.text , category , url , img , keywords , time , shareCount , likeCount , commentCount])
+
+    hotnews.append([title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img])
 
 for lists in hotnews:
     [title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img] = lists
@@ -46,11 +53,11 @@ for lists in hotnews:
         "title": title, # 標題
         "category": category, # 分類
         "keywords" : keywords, #關鍵字
-        "shareCount": '', # 分享數
-        "likeCount": '', # 按讚數
-        "commentCount": '',
+        "shareCount": shareCount, # 分享數
+        "likeCount": likeCount, # 按讚數
+        "commentCount": commentCount,
         "browserCount": 0, # 瀏覽數
-        "content": '', #內文
+        "content": content, #內文
         "comment" : [], # 評論
         "url" : url, # 網址
         "create_date" : time, # 發布時間
