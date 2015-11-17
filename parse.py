@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 
 # Global Varibles
-collection = MongoClient('localhost', 27017).xgag.posts
+collection = MongoClient('localhost', 27017).iguana.ettoday
 
 
 hotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
