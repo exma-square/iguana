@@ -34,12 +34,14 @@ for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hot
     time = time.text
     time = time.strip("(")
     time = time.strip(")")
-    time = time.replace(" " , "T") + "Z"
+    time = time.replace("-" , "/")
+    time = datetime.strptime(time, '%Y/%m/%d %H:%M')
 
     img = detailSoup.select('meta[property="og:image"]')[0].get('content')
 
     hotnews.append([title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img])
 
+create_at = datetime.now();
 col_ettoday = MongoClient('localhost', 27017).iguana.ettoday
 col_ettoday_count = MongoClient('localhost', 27017).iguana.ettoday_count
 for lists in hotnews:
@@ -52,6 +54,7 @@ for lists in hotnews:
         "comment" : [], # 評論
         "url" : url, # 網址
         "create_date" : time, # 發布時間
+        "create_at" : create_at, #寫入時間
         "image" : img, # 圖片
         "source" : "Ettoday", # 來源
     }
@@ -68,13 +71,15 @@ for lists in hotnews:
         "shareCount": shareCount, # 分享數
         "likeCount": likeCount, # 按讚數
         "commentCount": commentCount, #評論數
+        "update_time" : create_at,
         "browserCount": None, # 瀏覽數
     }
     col_ettoday_count.update_one(
         {
         "shareCount": shareCount, # 分享數
         "likeCount": likeCount, # 按讚數
-        "commentCount": commentCount #評論數
+        "commentCount": commentCount, #評論數
+        "update_time" : create_at
         },
         {"$set": count_dataObject} ,
         upsert = True

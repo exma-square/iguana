@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests
 from pymongo import MongoClient
+from datetime import datetime
 
 col_ettoday = MongoClient('localhost', 27017).iguana.ettoday
 col_ettoday_count = MongoClient('localhost', 27017).iguana.ettoday_count
@@ -21,6 +22,8 @@ for doc in ettoday:
         commentCount = 0
     hotnewsCount.append([news_id , shareCount, likeCount , commentCount])
 
+update_time = datetime.now();
+
 for lists in hotnewsCount:
     [news_id, shareCount, likeCount, commentCount] = lists
     #print news_id, shareCount, likeCount, commentCount
@@ -29,13 +32,15 @@ for lists in hotnewsCount:
         "shareCount": shareCount, # 分享數
         "likeCount": likeCount, # 按讚數
         "commentCount": commentCount, #評論數
+        "update_time" : update_time, #更新時間
         "browserCount": None, # 瀏覽數
     }
     col_ettoday_count.update_one(
         {
         "shareCount": shareCount, # 分享數
         "likeCount": likeCount, # 按讚數
-        "commentCount": commentCount #評論數
+        "commentCount": commentCount, #評論數
+        "update_time" : update_time
         },
         {"$set": count_dataObject} ,
         upsert = True
