@@ -1,46 +1,90 @@
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from datetime import datetime
 
-# Global Varibles
-collection = MongoClient('localhost', 27017).xgag.posts
-
 
 hotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
-hotnewsSoup = BeautifulSoup(hotnewsReq.text , "html.parser")
+hotnewsSoup = BeautifulSoup(hotnewsReq.text, "html.parser")
+
 
 hotnews = []
 
-for titles , time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.select('.box_0.clearfix p.summary span')):
+for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.select('.box_0.clearfix p.summary'), hotnewsSoup.select('.box_0.clearfix p.summary span')):
     url = "http://www.ettoday.net" + titles.get('href')
 
     detailReq = requests.get(url)
-    detailSoup = BeautifulSoup(detailReq.text)
+    detailSoup = BeautifulSoup(detailReq.text, "html.parser")
+
+    title = titles.text
+
+    category = detailSoup.select('body')[0].get('id')
+
+    keywords = [keyword.text for keyword in detailSoup.select('.menu_txt_2 a strong')]
+
+    url = detailSoup.select('head link[rel="canonical"]')[0].get('href')
+    fbReq = requests.get('https://graph.facebook.com/?ids=' + url)
+    fbData = fbReq.json()
+    shareCount = fbData[url]['shares'] if fbData[url].has_key('shares') else 0
+    likeCount = shareCount
+    commentCount = fbData[url]['comments'] if fbData[url].has_key('comments') else 0
+    content = content.text
 
     time = time.text
     time = time.strip("(")
     time = time.strip(")")
-    time = time.replace(" " , "T") + "Z"
-    tag = detailSoup.select('body')[0].get('id')
-    img = detailSoup.select('meta[property="og:image"]')[0].get('content')
-    keywords = [keyword.text for keyword in detailSoup.select('.menu_txt_2 a strong')]
-    hotnews.append([titles.text , tag , url , img , keywords , time])
+    time = time.replace("-" , "/")
+    time = datetime.strptime(time, '%Y/%m/%d %H:%M')
 
+    img = detailSoup.select('meta[property="og:image"]')[0].get('content')
+
+    hotnews.append([title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img])
+
+create_at = datetime.now();
+col_ettoday = MongoClient('localhost', 27017).iguana.ettoday
+col_ettoday_count = MongoClient('localhost', 27017).iguana.ettoday_count
 for lists in hotnews:
-    [title, category, url, img, keywords , time] = lists
-    dataObject = {
+    [title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img] = lists
+    content_dataObject = {
         "title": title, # 標題
-        "category": '', # 分類
+        "category": category, # 分類
         "keywords" : keywords, #關鍵字
-        "shareCount": '', # 分享數
-        "likeCount": '', # 按讚數
-        "browserCount": '', # 瀏覽數
-        "content": '', #內文
+        "content": content, #內文
         "comment" : [], # 評論
         "url" : url, # 網址
         "create_date" : time, # 發布時間
+        "create_at" : create_at, #寫入時間
         "image" : img, # 圖片
         "source" : "Ettoday", # 來源
     }
-    collection.insert_one(dataObject)
+    col_ettoday.update_one(
+        {
+           "title": title
+        },
+        {"$set": content_dataObject},
+        upsert = True
+    )
+    news_id = col_ettoday.find_one({'title': title})['_id']
+    count_dataObject = {
+        "news_id" : news_id,
+        "shareCount": shareCount, # 分享數
+        "likeCount": likeCount, # 按讚數
+        "commentCount": commentCount, #評論數
+        "update_time" : create_at,
+        "browserCount": None, # 瀏覽數
+    }
+    col_ettoday_count.update_one(
+        {
+        "shareCount": shareCount, # 分享數
+        "likeCount": likeCount, # 按讚數
+        "commentCount": commentCount, #評論數
+        "update_time" : create_at
+        },
+        {"$set": count_dataObject} ,
+        upsert = True
+    )
+
+
+
+
