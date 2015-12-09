@@ -4,14 +4,14 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from datetime import datetime
 
-#Ettoday parse
-EttodayhotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
-EttodayhotnewsSoup = BeautifulSoup(EttodayhotnewsReq.text, "html.parser")
+
+hotnewsReq = requests.get("http://www.ettoday.net/news/hot-news.htm")
+hotnewsSoup = BeautifulSoup(hotnewsReq.text, "html.parser")
 
 
-Ettodayhotnews = []
+hotnews = []
 
-for titles , content, time in zip(EttodayhotnewsSoup.select('.part_pictxt_2 h3 a'), EttodayhotnewsSoup.select('.box_0.clearfix p.summary'), EttodayhotnewsSoup.select('.box_0.clearfix p.summary span')):
+for titles , content, time in zip(hotnewsSoup.select('.part_pictxt_2 h3 a'), hotnewsSoup.select('.box_0.clearfix p.summary'), hotnewsSoup.select('.box_0.clearfix p.summary span')):
     url = "http://www.ettoday.net" + titles.get('href')
 
     detailReq = requests.get(url)
@@ -39,19 +39,19 @@ for titles , content, time in zip(EttodayhotnewsSoup.select('.part_pictxt_2 h3 a
 
     img = detailSoup.select('meta[property="og:image"]')[0].get('content')
 
-    Ettodayhotnews.append([title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img])
-
+    hotnews.append([title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img])
 
 create_at = datetime.now();
-col_ettoday = MongoClient('192.168.99.100', 27017).iguana.ettoday
-col_ettoday_count = MongoClient('192.168.99.100', 27017).iguana.ettoday_count
-for lists in Ettodayhotnews:
+col_ettoday = MongoClient('localhost', 27017).iguana.ettoday
+col_ettoday_count = MongoClient('localhost', 27017).iguana.ettoday_count
+for lists in hotnews:
     [title, category, keywords, shareCount, likeCount, commentCount, content, url, time, img] = lists
     content_dataObject = {
         "title": title, # 標題
         "category": category, # 分類
         "keywords" : keywords, #關鍵字
         "content": content, #內文
+        "comment" : [], # 評論
         "url" : url, # 網址
         "create_date" : time, # 發布時間
         "create_at" : create_at, #寫入時間
@@ -76,12 +76,15 @@ for lists in Ettodayhotnews:
     }
     col_ettoday_count.update_one(
         {
-            "news_id" : news_id,
-            "shareCount": shareCount, # 分享數
-            "likeCount": likeCount, # 按讚數
-            "commentCount": commentCount, #評論數
-            "update_time" : create_at
+        "shareCount": shareCount, # 分享數
+        "likeCount": likeCount, # 按讚數
+        "commentCount": commentCount, #評論數
+        "update_time" : create_at
         },
         {"$set": count_dataObject} ,
         upsert = True
     )
+
+
+
+
